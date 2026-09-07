@@ -1,299 +1,207 @@
-# Identity Lifecycle Runbook: Meridian Trust Bank (Okta)
+# Okta JML Lifecycle Automation
 
-## Purpose
+## Overview
 
-This runbook documents the Joiner, Mover and Leaver lifecycle implemented in the Meridian Trust Bank Okta lab.
+I built an automated Joiner-Mover-Leaver identity lifecycle in a free Okta Integrator environment, modelled on a fictional organisation, Meridian Trust Bank.
 
-The access model is based on group-based application assignment, attribute-driven group membership, and least-privilege administration.
+The access model is group-based rather than user-based. Applications are assigned to groups, and users are placed into the correct groups based on profile attributes such as department.
+
+This project demonstrates how access can be granted, changed, and removed as a user's role changes without manually assigning applications to each individual user.
+
+The key moment in the project was the Mover lifecycle. By changing one department attribute from Lending to Payments, the user's old access was removed and new access was granted automatically.
 
 ---
 
-## Design Principles
+## What This Project Demonstrates
 
-### Group-Based Assignment
+- Role-Based Access Control using groups
+- Group-based application assignment
+- Attribute-driven group rules
+- Joiner-Mover-Leaver lifecycle management
+- Automated provisioning and deprovisioning
+- Prevention of privilege creep
+- MFA enforcement using Okta Verify
+- Password policy hardening
+- Least-privilege delegated administration
+- Identity lifecycle evidence and audit awareness
 
-Applications are assigned to groups rather than directly to individual users.
+---
 
-This makes access management more scalable and allows access to change when group membership changes.
+## Access Model
 
-### Attribute-Driven Membership
+The environment was designed around the principle that applications are assigned to groups rather than directly to users.
 
-Group membership is determined by profile attributes such as department.
+### Groups
 
-Example:
+- Dept-Lending
+- Dept-Payments
+- All-Staff
+- Admins-Helpdesk
+
+### Applications
+
+- OriginateCloud
+- PaySuite
+- Meridian Intranet
+
+### Application Assignments
+
+- Meridian Intranet → All-Staff
+- OriginateCloud → Dept-Lending
+- PaySuite → Dept-Payments
+
+This means a user's application access is determined by group membership rather than individual assignment.
+
+---
+
+## Attribute-Driven Group Rules
+
+I created department-based group rules in Okta.
+
+### Lending Rule
+
+If:
 
 `Department = Lending`
 
-assigns the user to:
+Then:
 
-`Dept-Lending`
+`Assign to Dept-Lending`
 
-### Least-Privilege Administration
+### Payments Rule
 
-Administrative users receive only the permissions required for their role.
+If:
 
-Helpdesk users are given a scoped Help Desk Administrator role instead of full Super Administrator privileges.
+`Department = Payments`
 
----
+Then:
 
-# Joiner
+`Assign to Dept-Payments`
 
-## Trigger
-
-A new employee joins Meridian Trust Bank.
-
-## Manual Step
-
-An administrator creates the user in Okta and sets the required identity attributes.
-
-Example:
-
-- User: Priya Sharma
-- Department: Lending
-
-## Automated Actions
-
-After the Department attribute is saved:
-
-1. Okta evaluates the active group rules.
-2. The user is added to the correct department group.
-3. The user receives the applications assigned to that group.
-
-Example:
-
-`Department = Lending`
-
-results in:
-
-`Dept-Lending`
-
-which provides:
-
-`OriginateCloud`
-
-## Evidence
-
-Evidence may include:
-
-- user profile
-- group membership
-- end-user dashboard
-- relevant Okta System Log events
+These rules were activated so group membership could change automatically when a user's department changed.
 
 ---
 
-# Mover
+## Joiner Lifecycle
 
-## Trigger
+A new user, Priya Sharma, was created and assigned to the Lending department.
 
-An employee transfers to another department.
+Because her department matched the Lending group rule, she received access to OriginateCloud through group membership rather than a direct application assignment.
 
-Example:
+Evidence of the Joiner process is included in the project report.
 
-Priya Sharma moves from Lending to Payments.
+---
 
-## Manual Step
+## Mover Lifecycle
 
-The Department attribute is changed from:
-
-`Lending`
-
-to:
-
-`Payments`
-
-## Automated Actions
+Priya's department was changed from Lending to Payments.
 
 After the attribute change:
 
-1. Okta re-evaluates group membership.
-2. The user leaves Dept-Lending.
-3. Lending-specific access is removed.
-4. The user joins Dept-Payments.
-5. Payments-specific access is granted.
+- Lending access was removed
+- Payments access was granted
+- OriginateCloud was removed
+- PaySuite became available
 
-## Expected Outcome
+This demonstrated automated access reassignment and helped prevent privilege creep.
 
-OriginateCloud is removed and PaySuite becomes available.
-
-This prevents access from accumulating when users change roles.
-
-## Evidence
-
-Evidence may include:
-
-- updated user profile
-- updated group membership
-- user dashboard
-- application access change
-- relevant System Log events
+Evidence of the Mover process is included in the project report.
 
 ---
 
-# Leaver
+## Leaver Lifecycle
 
-## Trigger
-
-An employee leaves Meridian Trust Bank.
-
-## Manual Step
-
-The administrator selects:
-
-`More Actions → Deactivate`
-
-## Result
+Priya's account was deactivated to simulate employee offboarding.
 
 After deactivation:
 
-- authentication is blocked
-- application access is removed
-- the account remains visible for audit history
+- normal sign-in was no longer available
+- active access was removed
+- the identity remained available for audit history
 
-## Why Deactivate Instead of Delete
-
-Deactivation removes active access while preserving the identity record and historical evidence.
-
-Deletion would remove the audit trail.
-
-## Evidence
-
-Evidence may include:
-
-- deactivation confirmation
-- Deactivated account status
-- failed sign-in attempt
-- relevant Okta System Log event
+Evidence of the Leaver process is included in the project report.
 
 ---
 
-# Authentication Policy
+## Identity Security Hardening
 
-## MFA
+The Okta environment was further strengthened through:
 
-Okta Verify is configured as a required authenticator.
+### MFA Enforcement
 
-This reduces reliance on password-only authentication.
+Okta Verify was configured as a required authenticator.
 
-## Password Policy
+### Password Policy
 
-The password policy was strengthened using requirements including:
+The default password policy was strengthened to enforce stronger authentication requirements.
 
-- minimum password length
-- uppercase characters
-- lowercase characters
-- numbers
-- restricted/common password protection
-- account lockout controls
+### Least-Privilege Administration
 
-Routine password expiry was not used as the primary control.
+A Help Desk Administrator role was assigned instead of full Super Administrator privileges.
+
+Evidence of these hardening controls is included in the project report.
 
 ---
 
-# Administrative Model
+## Project Documentation
 
-## Super Administrator
+- [JML Runbook](runbook.md)
+- [Project Report with Evidence](Okta_JML_Project_Report.pdf)
 
-The main lab administrator retains Super Administrator access.
+The project report contains the screenshot evidence for:
 
-This role provides unrestricted control of the Okta environment and should be tightly restricted in production.
-
-## Help Desk Administrator
-
-A test user was assigned the Help Desk Administrator role.
-
-The user can perform limited support functions without unrestricted access to:
-
-- group rules
+- group creation
 - application configuration
-- security policies
-- high-risk administrative settings
-
-This demonstrates least-privilege administration.
-
----
-
-# Automated, Manual and Lab-Specific Activities
-
-| Process | Automated | Manual | Lab Shortcut |
-|---|---|---|---|
-| Joiner | Group membership and app access | User creation and department entry | Admin-set password |
-| Mover | Group and app access changes | Department attribute update | Attribute changed manually |
-| Leaver | Access removed after deactivation | Administrator selects Deactivate | Test identity |
-| MFA | Policy enforcement | Initial configuration | Test enrollment |
-| Applications | Group-based assignment | Initial group-to-app mapping | Bookmark Apps |
-| Admin Access | Role-scoped permissions | Admin role assignment | Test helpdesk account |
+- group-based assignments
+- group rules
+- Joiner lifecycle
+- Mover lifecycle
+- Leaver lifecycle
+- MFA configuration
+- password policy hardening
+- delegated Help Desk administration
 
 ---
 
-# Lab Shortcuts vs Production
+## Lab vs Production
 
-## Admin-Set Passwords
+This project was completed in a free Okta Integrator environment using a fictional banking scenario.
 
-### Lab
+Bookmark applications were used as stand-ins for production applications.
 
-Passwords were set manually because test users used fictional email addresses.
+In a production environment:
 
-### Production
+- identity attributes would normally come from an authoritative HR system
+- real applications would typically use SAML or OIDC
+- SCIM could be used for downstream provisioning and deprovisioning
+- activation flows would replace admin-set test passwords
+- audit logs would normally be retained for monitoring and compliance
 
-Users would typically follow secure activation flows.
-
----
-
-## Bookmark Applications
-
-### Lab
-
-OriginateCloud, PaySuite and Meridian Intranet were configured as Bookmark Apps.
-
-### Production
-
-Real applications would normally use protocols such as:
-
-- SAML
-- OIDC
-- SCIM
-
-where supported.
+The access automation, group rules, authentication policies, and administrative role configuration were implemented directly in Okta.
 
 ---
 
-## Identity Attributes
+## Skills Demonstrated
 
-### Lab
-
-Department attributes were entered manually.
-
-### Production
-
-Identity attributes would normally originate from an authoritative HR system.
-
-HR events such as hiring, role changes, and termination would drive the identity lifecycle automatically.
-
----
-
-## Audit Evidence
-
-### Lab
-
-Screenshots were captured as evidence.
-
-### Production
-
-Okta System Log events would normally be retained and potentially integrated with SIEM or governance tooling.
+- Identity and Access Management
+- Okta Administration
+- Joiner-Mover-Leaver Lifecycle
+- Role-Based Access Control
+- Group-Based Access Control
+- Attribute-Driven Access
+- Provisioning
+- Deprovisioning
+- Least Privilege
+- MFA Enforcement
+- Password Policy Management
+- Delegated Administration
+- Identity Governance
+- Audit Evidence Awareness
 
 ---
 
-# Operational Summary
+## Disclaimer
 
-## Joiner
+This project was completed in a free Okta Integrator environment using a fictional organisation for training and portfolio purposes.
 
-Create user → Set department → Group calculated → Access granted
-
-## Mover
-
-Change department → Old group removed → Old access revoked → New group added → New access granted
-
-## Leaver
-
-Deactivate user → Authentication blocked → Access removed → Audit record retained
+No real customer, employee, or production organisation data was used.
